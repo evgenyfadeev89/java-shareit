@@ -21,11 +21,11 @@ public class ItemRepository {
 
     public Collection<Item> findAll(Long userId) {
         log.info("Вызов показа всех пользователей");
-        return items.
-                values().
-                stream().
-                filter(item -> item.getOwner().equals(userId)).
-                collect(Collectors.toList());
+        return items
+                .values()
+                .stream()
+                .filter(item -> item.getOwner().equals(userId))
+                .collect(Collectors.toList());
     }
 
 
