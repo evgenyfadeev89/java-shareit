@@ -1,5 +1,7 @@
 package ru.practicum.shareit.item.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,6 +11,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.NewItemRequest;
 import ru.practicum.shareit.item.model.UpdateItemRequest;
+import ru.practicum.shareit.user.mapper.UserMapper;
 
 
 @Mapper(componentModel = "spring")
