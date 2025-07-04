@@ -6,12 +6,12 @@ import lombok.Data;
 
 @Data
 public class User {
-    Long id;
+    private Long id;
 
     @NotBlank
-    String name;
+    private String name;
 
     @Email
     @NotBlank
-    String email;
+    private String email;
 }

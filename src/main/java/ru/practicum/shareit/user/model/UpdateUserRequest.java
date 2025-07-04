@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 public class UpdateUserRequest {
 
-    String name;
+    private String name;
 
     @Email
-    String email;
+    private String email;
 
     public boolean hasValidName() {
         return !(name == null || name.isBlank());

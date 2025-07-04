@@ -1,42 +1,32 @@
 package ru.practicum.shareit.item.mapper;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.NewItemRequest;
 import ru.practicum.shareit.item.model.UpdateItemRequest;
 
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ItemMapper {
+@Mapper(componentModel = "spring")
+public interface ItemMapper {
 
-    public static ItemDto toItemDto(Item item) {
-        ItemDto itemDto = new ItemDto();
+    ItemMapper INSTANCE = Mappers.getMapper(ItemMapper.class);
 
-        itemDto.setId(item.getId());
-        itemDto.setName(item.getName());
-        itemDto.setDescription(item.getDescription());
-        itemDto.setAvailable(item.getAvailable());
-        itemDto.setOwner(item.getOwner());
-        itemDto.setRequest(item.getRequest() != null ? item.getRequest() : null);
+    ItemDto toItemDto(Item item);
 
-        return itemDto;
-    }
+    Item toItem(NewItemRequest itemRequest);
 
-    public static Item toItem(NewItemRequest itemRequest) {
-        Item item = new Item();
+    @Mapping(target = "id", ignore = true) // Игнорируем поля, которые не должны обновляться
+    @Mapping(target = "owner", ignore = true)
+    @Mapping(target = "request", ignore = true)
+    void updateItemFields(UpdateItemRequest request, @MappingTarget Item item);
 
-        item.setName(itemRequest.getName());
-        item.setDescription(itemRequest.getDescription());
-        item.setAvailable(itemRequest.getAvailable());
-        item.setOwner(itemRequest.getOwner());
-        item.setRequest(itemRequest.getRequest() != null ? itemRequest.getRequest() : null);
-
-        return item;
-    }
-
-    public static Item updateItemFields(Item item, UpdateItemRequest request) {
+    @AfterMapping
+    default void applyConditionalUpdates(UpdateItemRequest request, @MappingTarget Item item) {
         if (request.hasValidDescription()) {
             item.setDescription(request.getDescription());
         }
@@ -46,7 +36,5 @@ public class ItemMapper {
         if (request.hasValidAvailable()) {
             item.setAvailable(request.getAvailable());
         }
-
-        return item;
     }
 }

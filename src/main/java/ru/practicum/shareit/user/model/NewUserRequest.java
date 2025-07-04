@@ -8,11 +8,11 @@ import lombok.Data;
 public class NewUserRequest {
 
     @NotBlank
-    String name;
+    private String name;
 
     @Email
     @NotBlank
-    String email;
+    private String email;
 
     public boolean hasValidName() {
         return !(name == null || name.isBlank());

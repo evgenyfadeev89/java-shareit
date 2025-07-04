@@ -23,19 +23,20 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
 
     public List<UserDto> findAll() {
         return userRepository.findAll()
                 .stream()
-                .map(UserMapper::toUserDto)
+                .map(userMapper::toUserDto)
                 .collect(Collectors.toList());
     }
 
 
     public UserDto getUserById(Long userId) {
         return userRepository.findById(userId)
-                .map(UserMapper::toUserDto)
+                .map(userMapper::toUserDto)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + userId));
     }
 
@@ -54,10 +55,10 @@ public class UserService {
             throw new DuplicatedDataException("Данный имейл уже используется");
         }
 
-        User user = UserMapper.toUser(request);
+        User user = userMapper.toUser(request);
         user = userRepository.save(user);
 
-        return UserMapper.toUserDto(user);
+        return userMapper.toUserDto(user);
     }
 
 
@@ -78,7 +79,7 @@ public class UserService {
         }
 
         updatedUser = userRepository.update(updatedUser);
-        return UserMapper.toUserDto(updatedUser);
+        return userMapper.toUserDto(updatedUser);
     }
 
 

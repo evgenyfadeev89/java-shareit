@@ -14,7 +14,6 @@ import ru.practicum.shareit.item.model.UpdateItemRequest;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,13 +24,14 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final ItemMapper itemMapper;
 
 
     @Override
     public List<ItemDto> findAll(Long userId) {
         return itemRepository.findAll(userId)
                 .stream()
-                .map(ItemMapper::toItemDto)
+                .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
@@ -39,7 +39,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long itemId) {
         return itemRepository.findById(itemId)
-                .map(ItemMapper::toItemDto)
+                .map(itemMapper::toItemDto)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена с ID: " + itemId));
     }
 
@@ -49,7 +49,7 @@ public class ItemServiceImpl implements ItemService {
         return itemRepository.findByName(text)
                 .stream()
                 .filter(itm -> itm.getAvailable().equals(true))
-                .map(ItemMapper::toItemDto)
+                .map(itemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
@@ -73,10 +73,10 @@ public class ItemServiceImpl implements ItemService {
         }
 
         request.setOwner(userId);
-        Item item = ItemMapper.toItem(request);
+        Item item = itemMapper.toItem(request);
         item = itemRepository.save(item);
 
-        return ItemMapper.toItemDto(item);
+        return itemMapper.toItemDto(item);
     }
 
     @Override
@@ -86,10 +86,11 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Item updatedItem = itemRepository.findById(itemId)
-                .map(item -> ItemMapper.updateItemFields(item, request))
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+        itemMapper.updateItemFields(request, updatedItem);  // Изменяем существующий объект
+
         updatedItem = itemRepository.update(updatedItem);
 
-        return ItemMapper.toItemDto(updatedItem);
+        return itemMapper.toItemDto(updatedItem);
     }
 }
