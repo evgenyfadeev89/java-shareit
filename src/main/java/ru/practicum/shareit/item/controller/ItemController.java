@@ -11,7 +11,6 @@ import ru.practicum.shareit.item.model.NewItemRequest;
 import ru.practicum.shareit.item.model.UpdateItemRequest;
 import ru.practicum.shareit.item.service.ItemService;
 
-
 import java.util.List;
 
 
@@ -45,14 +44,14 @@ public class ItemController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ItemDto> create(@RequestBody NewItemRequest itemRequest,
-                          @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                          @RequestHeader("X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.create(itemRequest, userId));
     }
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<ItemDto> update(@PathVariable("itemId") Long itemId,
-                          @Valid @RequestBody UpdateItemRequest updateItemRequest,
-                          @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                          @Valid @RequestBody UpdateItemRequest updateItemRequest,
+                                          @RequestHeader("X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.update(itemId, updateItemRequest, userId));
     }
 }
