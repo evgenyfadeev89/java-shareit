@@ -41,8 +41,10 @@ public class ItemRepository {
             return items.values()
                     .stream()
                     .filter(Objects::nonNull)
-                    .filter(item -> item.getName().equalsIgnoreCase(text)
-                            || item.getDescription().toLowerCase().contains(text.toLowerCase()))
+                    .filter(item ->
+                            Optional.ofNullable(item.getName()).orElse("").equalsIgnoreCase(text) ||
+                                    Optional.ofNullable(item.getDescription()).orElse("").toLowerCase().contains(text.toLowerCase())
+                    )
                     .collect(Collectors.toList());
         }
     }
