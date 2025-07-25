@@ -1,40 +1,51 @@
 package ru.practicum.shareit.item.mapper;
 
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+import ru.practicum.shareit.item.dto.AllItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.NewItemRequest;
-import ru.practicum.shareit.item.model.UpdateItemRequest;
+import ru.practicum.shareit.item.model.NewItem;
+import ru.practicum.shareit.item.model.UpdateItem;
+import ru.practicum.shareit.request.repository.RequestRepository;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        uses = {UserRepository.class, RequestRepository.class})
 public interface ItemMapper {
 
     ItemMapper INSTANCE = Mappers.getMapper(ItemMapper.class);
 
+    @Mapping(source = "owner.id", target = "owner")
+    @Mapping(source = "request.id", target = "request")
     ItemDto toItemDto(Item item);
 
-    Item toItem(NewItemRequest itemRequest);
 
-    @Mapping(target = "id", ignore = true) // Игнорируем поля, которые не должны обновляться
-    @Mapping(target = "owner", ignore = true)
+    @Mapping(source = "owner.id", target = "owner")
+    @Mapping(source = "request.id", target = "request")
+    AllItemDto toAllItemDto(Item item);
+
+
+    @Mapping(source = "owner", target = "owner.id")
+    @Mapping(target = "id", ignore = true)
+    Item toItem(NewItem newItem);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "request", ignore = true)
-    void updateItemFields(UpdateItemRequest request, @MappingTarget Item item);
+    void updateItemFields(UpdateItem updateItem, @MappingTarget Item item);
 
     @AfterMapping
-    default void applyConditionalUpdates(UpdateItemRequest request, @MappingTarget Item item) {
-        if (request.hasValidDescription()) {
-            item.setDescription(request.getDescription());
+    default void applyConditionalUpdates(UpdateItem updateItem, @MappingTarget Item item) {
+        if (updateItem.hasValidDescription()) {
+            item.setDescription(updateItem.getDescription());
         }
-        if (request.hasValidName()) {
-            item.setName(request.getName());
+        if (updateItem.hasValidName()) {
+            item.setName(updateItem.getName());
         }
-        if (request.hasValidAvailable()) {
-            item.setAvailable(request.getAvailable());
+        if (updateItem.hasValidAvailable()) {
+            item.setAvailable(updateItem.getAvailable());
         }
     }
 }
