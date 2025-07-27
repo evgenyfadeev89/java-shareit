@@ -30,6 +30,7 @@ public class BookingServiceImpl implements BookingService {
     private final ItemRepository itemRepository;
     private final BookingMapper bookingMapper;
 
+    @Override
     public BookingDto create(NewBooking newBooking, Long userId) {
         if (userId == null) {
             throw new NotFoundException("ID пользователя не указан");

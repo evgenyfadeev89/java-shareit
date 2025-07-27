@@ -12,7 +12,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.NewCommentRequest;
 import ru.practicum.shareit.item.model.NewItem;
 import ru.practicum.shareit.item.model.UpdateItem;
-import ru.practicum.shareit.item.service.ItemServiceImpl;
+import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class ItemController {
-    private final ItemServiceImpl itemService;
+    private final ItemService itemService;
 
     @GetMapping
     public ResponseEntity<List<AllItemDto>> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {

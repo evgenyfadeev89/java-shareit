@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.NewBooking;
-import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.booking.service.BookingService;
 
 import java.util.List;
 
@@ -18,15 +18,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookingController {
 
-    private final BookingServiceImpl bookingService;
+    private final BookingService bookingService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookingDto create(
+    public ResponseEntity<BookingDto> create(
             @RequestBody NewBooking newBooking,
             @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Creating booking for user ID: {}", userId);
-        return bookingService.create(newBooking, userId);
+        return ResponseEntity.ok(bookingService.create(newBooking, userId));
     }
 
     @PatchMapping("/{bookingId}")
