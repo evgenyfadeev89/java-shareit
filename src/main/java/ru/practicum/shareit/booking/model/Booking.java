@@ -1,29 +1,36 @@
 package ru.practicum.shareit.booking.model;
 
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PastOrPresent;
+import jakarta.persistence.*;
 import lombok.Data;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
+@Entity
+@Table(name = "bookings")
 @Data
 public class Booking {
-    @NotBlank
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @PastOrPresent(message = "Дата не может быть в прошлом")
-    private LocalDate start;
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime start;
 
-    @FutureOrPresent(message = "Дата не может быть в прошлом")
-    private LocalDate end;
+    @Column(name = "end_date")
+    private LocalDateTime end;
 
+    @ManyToOne
+    @JoinColumn(name = "item_id", foreignKey = @ForeignKey(name = "fk_items_id"), nullable = false)
     private Item item;
 
+    @ManyToOne
+    @JoinColumn(name = "booker_id", foreignKey = @ForeignKey(name = "fk_booker_id"), nullable = false)
     private User booker;
 
+    @Enumerated(EnumType.STRING)
     private Status status;
 }

@@ -27,9 +27,9 @@ public class UserController {
     public ResponseEntity<List<UserDto>> getAll() {
         List<UserDto> users = userService.findAll();
         if (users.isEmpty()) {
-            return ResponseEntity.noContent().build(); // 204 No Content
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.ok(users); // 200 OK
+            return ResponseEntity.ok(users);
         }
     }
 
@@ -56,6 +56,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Void> delete(@PathVariable("userId") Long userId) {
         userService.deleteUserById(userId);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }
