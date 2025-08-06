@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.PersonalRequestDto;
 import ru.practicum.shareit.request.dto.PublicRequestDto;
 import ru.practicum.shareit.request.dto.RequestDto;
@@ -66,6 +67,14 @@ class RequestControllerTest {
     }
 
     @Test
+    void createWithoutUserIdHeaderShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void create() throws Exception {
         given(requestService.create(any(NewRequest.class), anyLong(), any())).willReturn(requestDto);
 
@@ -111,5 +120,35 @@ class RequestControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(personalRequestDto.getId()))
                 .andExpect(jsonPath("$.description").value(personalRequestDto.getDescription()));
+    }
+
+    @Test
+    void findAllPersonalReturnsEmptyShouldReturnNoContent() throws Exception {
+        given(requestService.findAllPersonal(anyLong())).willReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/requests")
+                        .header("X-Sharer-User-Id", 1L))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void findAllReturnsEmptyShouldReturnNoContent() throws Exception {
+        given(requestService.findAll(anyLong())).willReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/requests/all")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("from", "0")
+                        .param("size", "10"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void getRequestByIdNotFoundShouldReturnNotFound() throws Exception {
+        given(requestService.getRequestById(anyLong(), anyLong()))
+                .willThrow(new NotFoundException("Request not found"));
+
+        mockMvc.perform(get("/requests/{requestId}", 999L)
+                        .header("X-Sharer-User-Id", 1L))
+                .andExpect(status().isNotFound());
     }
 }

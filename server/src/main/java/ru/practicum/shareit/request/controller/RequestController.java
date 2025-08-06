@@ -25,7 +25,7 @@ public class RequestController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<RequestDto> create(@RequestBody NewRequest newRequest,
-                                             @RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId) {
+                                             @RequestHeader(value = "X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(requestService.create(newRequest, userId, LocalDateTime.now()));
     }
 

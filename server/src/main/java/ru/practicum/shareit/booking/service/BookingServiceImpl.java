@@ -36,6 +36,12 @@ public class BookingServiceImpl implements BookingService {
         if (userId == null) {
             throw new NotFoundException("ID пользователя не указан");
         }
+        if (newBooking.getStart() == null) {
+            throw new ValidationException("Время начала бронирования не указано");
+        }
+        if (newBooking.getEnd() == null) {
+            throw new ValidationException("Время конца бронирования не указано");
+        }
 
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Такого пользователя не существует"));
@@ -51,18 +57,6 @@ public class BookingServiceImpl implements BookingService {
         }
         if (newBooking.getStart().equals(newBooking.getEnd())) {
             throw new ValidationException("Время начала и конец бронирования равны");
-        }
-        if (newBooking.getStart() == null) {
-            throw new ValidationException("Время начала бронирования не указано");
-        }
-        if (newBooking.getEnd() == null) {
-            throw new ValidationException("Время конца бронирования не указано");
-        }
-
-        //костыль
-        if (newBooking.getStart().plusSeconds(1).equals(newBooking.getEnd())) {
-            newBooking.setStart(newBooking.getStart().minusSeconds(8));
-            newBooking.setEnd(newBooking.getEnd().minusSeconds(6));
         }
 
         newBooking.setBooker(userId);

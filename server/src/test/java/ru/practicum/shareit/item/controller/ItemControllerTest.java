@@ -20,6 +20,7 @@ import ru.practicum.shareit.item.model.UpdateItem;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -111,6 +112,41 @@ class ItemControllerTest {
         mockMvc.perform(get("/items")
                         .header("X-Sharer-User-Id", 1L))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void getAllReturnsItems() throws Exception {
+        List<AllItemDto> items = List.of(
+                new AllItemDto(1L,
+                        "Item 1",
+                        "Description 1",
+                        true,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null),
+                new AllItemDto(2L,
+                        "Item 2",
+                        "Description 2",
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null)
+        );
+
+        given(itemService.findAll(anyLong())).willReturn(items);
+
+        mockMvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(items.size()))
+                .andExpect(jsonPath("$[0].id").value(items.get(0).getId()))
+                .andExpect(jsonPath("$[0].name").value(items.get(0).getName()))
+                .andExpect(jsonPath("$[1].id").value(items.get(1).getId()))
+                .andExpect(jsonPath("$[1].available").value(items.get(1).getAvailable()));
     }
 
     @Test

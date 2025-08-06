@@ -22,8 +22,6 @@ public interface RequestMapper {
     @Mapping(source = "requestor", target = "requestor.id")
     Request toRequest(NewRequest newRequest);
 
-    //@Mapping(source = "id", target = "itemId")
-    //@Mapping(source = "name", target = "itemName")
     @Mapping(source = "owner.id", target = "owner")
     AnswerDto toAnswerDto(Item item);
 

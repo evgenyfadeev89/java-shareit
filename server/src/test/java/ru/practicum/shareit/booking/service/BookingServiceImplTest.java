@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,10 +67,44 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void createBookingStartEqualsEndShouldThrowValidationException() {
+        LocalDateTime now = LocalDateTime.now();
+        NewBooking invalidBooking = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1),
+                now.plusDays(1),
+                Status.WAITING);
+        assertThrows(ValidationException.class, () -> bookingService.create(invalidBooking, booker.getId()));
+    }
+
+    @Test
+    void createBookingStartIsNullShouldThrowValidationException() {
+        NewBooking invalidBooking = new NewBooking(item.getId(), booker.getId(),
+                null,
+                LocalDateTime.now().plusDays(2),
+                Status.WAITING);
+        assertThrows(ValidationException.class, () -> bookingService.create(invalidBooking, booker.getId()));
+    }
+
+    @Test
+    void createBookingEndIsNullShouldThrowValidationException() {
+        NewBooking invalidBooking = new NewBooking(item.getId(), booker.getId(),
+                LocalDateTime.now().plusDays(1),
+                null,
+                Status.WAITING);
+        assertThrows(ValidationException.class, () -> bookingService.create(invalidBooking, booker.getId()));
+    }
+
+    @Test
     void approveBooking() {
         BookingDto bookingDto = bookingService.create(newBooking, booker.getId());
         BookingDto approvedBooking = bookingService.approveBooking(bookingDto.getId(), owner.getId(), true);
         assertEquals(Status.APPROVED, approvedBooking.getStatus());
+    }
+
+    @Test
+    void approveBookingNullApprovedShouldHandleGracefully() {
+        BookingDto bookingDto = bookingService.create(newBooking, booker.getId());
+        assertThrows(NullPointerException.class, () -> bookingService.approveBooking(bookingDto.getId(), owner.getId(), null));
     }
 
     @Test
@@ -133,6 +168,11 @@ class BookingServiceImplTest {
     @Test
     void getUserBookingsInvalidState() {
         assertThrows(IllegalArgumentException.class, () -> bookingService.getUserBookings(booker.getId(), BookingState.valueOf("INVALID")));
+    }
+
+    @Test
+    void getOwnerBookingsUserHasNoItemsShouldThrowNotFound() {
+        assertThrows(NotFoundException.class, () -> bookingService.getOwnerBookings(999L, BookingState.ALL));
     }
 
     @Test

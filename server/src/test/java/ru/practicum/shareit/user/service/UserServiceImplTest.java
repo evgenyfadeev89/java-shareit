@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ConditionsNotMetException;
+import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -49,6 +51,25 @@ class UserServiceImplTest {
     }
 
     @Test
+    void createUserShouldThrowIfNameInvalid() {
+        NewUserRequest invalidRequest = new NewUserRequest("", "valid@example.com");
+        assertThrows(ConditionsNotMetException.class, () -> userService.create(invalidRequest));
+    }
+
+    @Test
+    void createUserShouldThrowIfEmailInvalid() {
+        NewUserRequest invalidRequest = new NewUserRequest("Valid Name", "");
+        assertThrows(ConditionsNotMetException.class, () -> userService.create(invalidRequest));
+    }
+
+    @Test
+    void createUserShouldThrowIfEmailAlreadyExists() {
+        userService.create(newUserRequest);  // первый пользователь с email
+        NewUserRequest duplicateEmailRequest = new NewUserRequest("Another Name", newUserRequest.getEmail());
+        assertThrows(DuplicatedDataException.class, () -> userService.create(duplicateEmailRequest));
+    }
+
+    @Test
     void updateUser() {
         UserDto createdUser = userService.create(newUserRequest);
         UserDto updatedUser = userService.update(createdUser.getId(), updateUserRequest);
@@ -59,6 +80,33 @@ class UserServiceImplTest {
     @Test
     void updateUserWithNonExistentId() {
         assertThrows(NotFoundException.class, () -> userService.update(999L, updateUserRequest));
+    }
+
+    @Test
+    void updateUserShouldNotChangeNameIfInvalid() {
+        UserDto createdUser = userService.create(newUserRequest);
+        UpdateUserRequest partialUpdate = new UpdateUserRequest("", "newemail@example.com");
+        UserDto updatedUser = userService.update(createdUser.getId(), partialUpdate);
+        assertEquals(createdUser.getName(), updatedUser.getName());
+        assertEquals(partialUpdate.getEmail(), updatedUser.getEmail());
+    }
+
+    @Test
+    void updateUserShouldThrowIfEmailAlreadyUsedByAnother() {
+        UserDto user1 = userService.create(new NewUserRequest("User 1", "email1@example.com"));
+        UserDto user2 = userService.create(new NewUserRequest("User 2", "email2@example.com"));
+
+        UpdateUserRequest conflictingEmailUpdate = new UpdateUserRequest(null, "email1@example.com");
+        assertThrows(DuplicatedDataException.class, () -> userService.update(user2.getId(), conflictingEmailUpdate));
+    }
+
+    @Test
+    void updateUserWithNullFieldsShouldNotChangeUser() {
+        UserDto createdUser = userService.create(newUserRequest);
+        UpdateUserRequest updateNothing = new UpdateUserRequest(null, null);
+        UserDto updatedUser = userService.update(createdUser.getId(), updateNothing);
+        assertEquals(createdUser.getName(), updatedUser.getName());
+        assertEquals(createdUser.getEmail(), updatedUser.getEmail());
     }
 
     @Test
