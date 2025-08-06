@@ -86,6 +86,11 @@ class BookingServiceImplTest {
     }
 
     @Test
+    void createBookingWithNullUserId() {
+        assertThrows(NotFoundException.class, () -> bookingService.create(newBooking, null));
+    }
+
+    @Test
     void createBookingEndIsNullShouldThrowValidationException() {
         NewBooking invalidBooking = new NewBooking(item.getId(), booker.getId(),
                 LocalDateTime.now().plusDays(1),

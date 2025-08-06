@@ -285,4 +285,74 @@ class ItemServiceImplTest {
         assertNull(foundItem.getLastBooking());
         assertNull(foundItem.getNextBooking());
     }
+
+    @Test
+    void getItemByIdShouldSetLastBookingWhenBookingEndIsAfterNow() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        Booking futureEndingBooking = new Booking();
+        futureEndingBooking.setItem(itemRepository.findById(createdItem.getId()).orElseThrow());
+        futureEndingBooking.setBooker(owner);
+        futureEndingBooking.setStart(LocalDateTime.now().minusDays(2));
+        futureEndingBooking.setEnd(LocalDateTime.now().plusDays(1));
+        futureEndingBooking.setStatus(Status.APPROVED);
+        bookingRepository.save(futureEndingBooking);
+
+        AllItemDto dto = itemService.getItemById(createdItem.getId(), owner.getId());
+
+        assertNotNull(dto.getLastBooking());
+        assertEquals(futureEndingBooking.getEnd(), dto.getLastBooking());
+    }
+
+    @Test
+    void getItemByIdShouldSetLastBookingNullWhenBookingEndIsBeforeNow() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        Booking pastBooking = new Booking();
+        pastBooking.setItem(itemRepository.findById(createdItem.getId()).orElseThrow());
+        pastBooking.setBooker(owner);
+        pastBooking.setStart(LocalDateTime.now().minusDays(5));
+        pastBooking.setEnd(LocalDateTime.now().minusDays(1)); // end до now
+        pastBooking.setStatus(Status.APPROVED);
+        bookingRepository.save(pastBooking);
+
+        AllItemDto dto = itemService.getItemById(createdItem.getId(), owner.getId());
+
+        assertNull(dto.getLastBooking());
+    }
+
+    @Test
+    void getItemByIdShouldSetNextBookingWhenBookingEndIsAfterNow() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        Booking futureBooking = new Booking();
+        futureBooking.setItem(itemRepository.findById(createdItem.getId()).orElseThrow());
+        futureBooking.setBooker(owner);
+        futureBooking.setStart(LocalDateTime.now().plusDays(1));
+        futureBooking.setEnd(LocalDateTime.now().plusDays(2));
+        futureBooking.setStatus(Status.APPROVED);
+        bookingRepository.save(futureBooking);
+
+        AllItemDto dto = itemService.getItemById(createdItem.getId(), owner.getId());
+
+        assertNotNull(dto.getNextBooking());
+        assertEquals(futureBooking.getStart(), dto.getNextBooking());
+    }
+
+    @Test
+    void getItemByIdShouldSetNextBookingNullWhenBookingEndIsBeforeNow() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        Booking pastBooking = new Booking();
+        pastBooking.setItem(itemRepository.findById(createdItem.getId()).orElseThrow());
+        pastBooking.setBooker(owner);
+        pastBooking.setStart(LocalDateTime.now().minusDays(3));
+        pastBooking.setEnd(LocalDateTime.now().minusDays(2));
+        pastBooking.setStatus(Status.APPROVED);
+        bookingRepository.save(pastBooking);
+
+        AllItemDto dto = itemService.getItemById(createdItem.getId(), owner.getId());
+
+        assertNull(dto.getNextBooking());
+    }
 }
