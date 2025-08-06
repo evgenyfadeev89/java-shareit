@@ -2,8 +2,7 @@ package ru.practicum.shareit.user.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UpdateUserRequestTest {
     @Test
@@ -69,5 +68,29 @@ public class UpdateUserRequestTest {
         UpdateUserRequest updateUserRequest2 = new UpdateUserRequest("Иван Иванов", "ivan.ivanov@example.com");
 
         assertEquals(updateUserRequest1, updateUserRequest2);
+    }
+
+    @Test
+    void testHasValidEmail() {
+        UpdateUserRequest validEmail = new UpdateUserRequest("Иван Иванов", "ivan.ivanov@example.com");
+        assertTrue(validEmail.hasValidEmail());
+
+        UpdateUserRequest nullEmail = new UpdateUserRequest("Иван Иванов", null);
+        assertFalse(nullEmail.hasValidEmail());
+
+        UpdateUserRequest emptyEmail = new UpdateUserRequest("Иван Иванов", "");
+        assertFalse(emptyEmail.hasValidEmail());
+
+        UpdateUserRequest blankEmail = new UpdateUserRequest("Иван Иванов", "   ");
+        assertFalse(blankEmail.hasValidEmail());
+
+        UpdateUserRequest noAtEmail = new UpdateUserRequest("Иван Иванов", "ivan.ivanovexample.com");
+        assertFalse(noAtEmail.hasValidEmail());
+
+        UpdateUserRequest atStartEmail = new UpdateUserRequest("Иван Иванов", "@example.com");
+        assertTrue(atStartEmail.hasValidEmail());
+
+        UpdateUserRequest atEndEmail = new UpdateUserRequest("Иван Иванов", "ivan@");
+        assertTrue(atEndEmail.hasValidEmail());
     }
 }

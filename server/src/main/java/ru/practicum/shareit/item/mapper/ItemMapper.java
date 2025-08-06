@@ -7,7 +7,9 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.NewItem;
 import ru.practicum.shareit.item.model.UpdateItem;
+import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.request.repository.RequestRepository;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 
@@ -27,7 +29,8 @@ public interface ItemMapper {
     AllItemDto toAllItemDto(Item item);
 
 
-    @Mapping(source = "owner", target = "owner.id")
+    @Mapping(source = "owner", target = "owner", qualifiedByName = "mapOwner")
+    @Mapping(source = "requestId", target = "request", qualifiedByName = "mapRequest")
     @Mapping(target = "id", ignore = true)
     Item toItem(NewItem newItem);
 
@@ -47,5 +50,25 @@ public interface ItemMapper {
         if (updateItem.hasValidAvailable()) {
             item.setAvailable(updateItem.getAvailable());
         }
+    }
+
+    @Named("mapOwner")
+    default User mapOwner(Long ownerId) {
+        if (ownerId == null) {
+            return null;
+        }
+        User user = new User();
+        user.setId(ownerId);
+        return user;
+    }
+
+    @Named("mapRequest")
+    default Request mapRequest(Long requestId) {
+        if (requestId == null) {
+            return null;
+        }
+        Request request = new Request();
+        request.setId(requestId);
+        return request;
     }
 }

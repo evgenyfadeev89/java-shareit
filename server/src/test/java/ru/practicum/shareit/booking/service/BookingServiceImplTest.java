@@ -266,4 +266,187 @@ class BookingServiceImplTest {
         List<BookingDto> bookings = bookingService.getOwnerBookings(owner.getId(), BookingState.REJECTED);
         assertFalse(bookings.isEmpty());
     }
+
+    @Test
+    void getUserBookingsCurrentStateShouldIncludeBookingsWithStartBeforeNowAndEndAfterNow() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking bookingCurrent = new NewBooking(item.getId(), booker.getId(),
+                now.minusDays(1), now.plusDays(1), Status.APPROVED);
+
+        bookingService.create(bookingCurrent, booker.getId());
+
+        List<BookingDto> bookings = bookingService.getUserBookings(booker.getId(), BookingState.CURRENT);
+        assertFalse(bookings.isEmpty());
+        assertTrue(bookings.stream().anyMatch(b -> b.getStart().isBefore(now) &&
+                (b.getEnd().isAfter(now) || b.getEnd() == null)));
+    }
+
+    @Test
+    void getUserBookingsPastStateShouldIncludeBookingsWithEndBeforeNow() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking bookingPast = new NewBooking(item.getId(), booker.getId(),
+                now.minusDays(5), now.minusDays(1), Status.APPROVED);
+
+        bookingService.create(bookingPast, booker.getId());
+
+        List<BookingDto> bookings = bookingService.getUserBookings(booker.getId(), BookingState.PAST);
+        assertFalse(bookings.isEmpty());
+        assertTrue(bookings.stream().allMatch(b -> b.getEnd().isBefore(now)));
+    }
+
+    @Test
+    void getUserBookingsFutureStateShouldIncludeBookingsWithStartAfterNow() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking bookingFuture = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1), now.plusDays(2), Status.WAITING);
+
+        bookingService.create(bookingFuture, booker.getId());
+
+        List<BookingDto> bookings = bookingService.getUserBookings(booker.getId(), BookingState.FUTURE);
+        assertFalse(bookings.isEmpty());
+        assertTrue(bookings.stream().allMatch(b -> b.getStart().isAfter(now)));
+    }
+
+    @Test
+    void getUserBookingsWaitingStateShouldIncludeBookingsWithStatusWaiting() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking bookingWaiting = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1), now.plusDays(2), Status.WAITING);
+
+        bookingService.create(bookingWaiting, booker.getId());
+
+        List<BookingDto> bookings = bookingService.getUserBookings(booker.getId(), BookingState.WAITING);
+        assertFalse(bookings.isEmpty());
+        assertTrue(bookings.stream().allMatch(b -> b.getStatus() == Status.WAITING));
+    }
+
+    @Test
+    void getUserBookingsRejectedStateShouldIncludeBookingsWithStatusRejected() {
+        BookingDto bookingDto = bookingService.create(newBooking, booker.getId());
+        bookingService.approveBooking(bookingDto.getId(), owner.getId(), false);
+
+        List<BookingDto> bookings = bookingService.getUserBookings(booker.getId(), BookingState.REJECTED);
+        assertFalse(bookings.isEmpty());
+        assertTrue(bookings.stream().allMatch(b -> b.getStatus() == Status.REJECTED));
+    }
+
+    @Test
+    void createBookingWithNonexistentUserShouldThrowNotFoundException() {
+        NewBooking booking = new NewBooking(item.getId(), 999L,
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(2),
+                Status.WAITING);
+
+        assertThrows(NotFoundException.class, () -> bookingService.create(booking, 999L));
+    }
+
+    @Test
+    void createBookingWithNonexistentItemShouldThrowNotFoundException() {
+        NewBooking booking = new NewBooking(999L, booker.getId(),
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(2),
+                Status.WAITING);
+
+        assertThrows(NotFoundException.class, () -> bookingService.create(booking, booker.getId()));
+    }
+
+    @Test
+    void getBookingByIdNotAuthorizedShouldThrowConditionsNotMetException() {
+        BookingDto bookingDto = bookingService.create(newBooking, booker.getId());
+
+        User otherUser = userRepository.save(new User(null, "Other", "other@example.com"));
+
+        assertThrows(ConditionsNotMetException.class, () ->
+                bookingService.getBookingById(bookingDto.getId(), otherUser.getId()));
+    }
+
+    @Test
+    void getUserBookingsCurrentStateShouldReturnOnlyCurrentBookings() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking currentBooking = new NewBooking(item.getId(), booker.getId(),
+                now.minusHours(1), now.plusHours(1), Status.APPROVED);
+        bookingService.create(currentBooking, booker.getId());
+
+        NewBooking pastBooking = new NewBooking(item.getId(), booker.getId(),
+                now.minusDays(5), now.minusDays(2), Status.APPROVED);
+        bookingService.create(pastBooking, booker.getId());
+
+        List<BookingDto> currentBookings = bookingService.getUserBookings(booker.getId(), BookingState.CURRENT);
+
+        assertFalse(currentBookings.isEmpty());
+        assertTrue(currentBookings.stream().allMatch(b ->
+                b.getStart().isBefore(now) && (b.getEnd().isAfter(now) || b.getEnd() == null)
+        ));
+    }
+
+    @Test
+    void getUserBookings_PastState_ShouldReturnOnlyPastBookings() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking pastBooking = new NewBooking(item.getId(), booker.getId(),
+                now.minusDays(3), now.minusDays(1), Status.APPROVED);
+        bookingService.create(pastBooking, booker.getId());
+
+        NewBooking futureBooking = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1), now.plusDays(3), Status.APPROVED);
+        bookingService.create(futureBooking, booker.getId());
+
+        List<BookingDto> pastBookings = bookingService.getUserBookings(booker.getId(), BookingState.PAST);
+
+        assertFalse(pastBookings.isEmpty());
+        assertTrue(pastBookings.stream().allMatch(b -> b.getEnd().isBefore(now)));
+    }
+
+    @Test
+    void getUserBookings_FutureState_ShouldReturnOnlyFutureBookings() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking futureBooking = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(2), now.plusDays(4), Status.APPROVED);
+        bookingService.create(futureBooking, booker.getId());
+
+        NewBooking currentBooking = new NewBooking(item.getId(), booker.getId(),
+                now.minusHours(1), now.plusHours(1), Status.APPROVED);
+        bookingService.create(currentBooking, booker.getId());
+
+        List<BookingDto> futureBookings = bookingService.getUserBookings(booker.getId(), BookingState.FUTURE);
+
+        assertFalse(futureBookings.isEmpty());
+        assertTrue(futureBookings.stream().allMatch(b -> b.getStart().isAfter(now)));
+    }
+
+    @Test
+    void getUserBookings_WaitingState_ShouldReturnOnlyWaitingBookings() {
+        LocalDateTime now = LocalDateTime.now();
+
+        NewBooking waitingBooking = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1), now.plusDays(2), Status.WAITING);
+        bookingService.create(waitingBooking, booker.getId());
+
+        NewBooking approvedBooking = new NewBooking(item.getId(), booker.getId(),
+                now.plusDays(1), now.plusDays(2), Status.APPROVED);
+        bookingService.create(approvedBooking, booker.getId());
+
+        List<BookingDto> waitingBookings = bookingService.getUserBookings(booker.getId(), BookingState.WAITING);
+
+        assertFalse(waitingBookings.isEmpty());
+        assertTrue(waitingBookings.stream().allMatch(b -> b.getStatus() == Status.WAITING));
+    }
+
+    @Test
+    void getUserBookings_RejectedState_ShouldReturnOnlyRejectedBookings() {
+        BookingDto bookingDto = bookingService.create(newBooking, booker.getId());
+        bookingService.approveBooking(bookingDto.getId(), owner.getId(), false);
+
+        List<BookingDto> rejectedBookings = bookingService.getUserBookings(booker.getId(), BookingState.REJECTED);
+
+        assertFalse(rejectedBookings.isEmpty());
+        assertTrue(rejectedBookings.stream().allMatch(b -> b.getStatus() == Status.REJECTED));
+    }
+
 }

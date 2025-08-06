@@ -19,6 +19,8 @@ import ru.practicum.shareit.item.model.NewCommentRequest;
 import ru.practicum.shareit.item.model.NewItem;
 import ru.practicum.shareit.item.model.UpdateItem;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.Request;
+import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -39,6 +41,9 @@ class ItemServiceImplTest {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private RequestRepository requestRepository;
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -104,6 +109,58 @@ class ItemServiceImplTest {
     }
 
     @Test
+    void createItemWithInvalidNameShouldThrowConditionsNotMetException() {
+        newItem.setName(null);
+        ConditionsNotMetException ex = assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId())
+        );
+        assertEquals("Имя должно быть указано", ex.getMessage());
+
+        newItem.setName("");
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+
+        newItem.setName("   ");
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+    }
+
+    @Test
+    void createItemWithInvalidDescriptionShouldThrowConditionsNotMetException() {
+        newItem.setDescription(null);
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+
+        newItem.setDescription("");
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+
+        newItem.setDescription("  ");
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+    }
+
+    @Test
+    void createItemWithInvalidAvailableShouldThrowConditionsNotMetException() {
+        newItem.setAvailable(null);
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId()));
+    }
+
+    @Test
+    void createItemWithNonExistentRequestShouldThrowConditionsNotMetException() {
+        Long fakeRequestId = 999L;
+        newItem.setRequestId(fakeRequestId);
+
+        assertFalse(requestRepository.findById(fakeRequestId).isPresent());
+
+        ConditionsNotMetException ex = assertThrows(ConditionsNotMetException.class, () ->
+                itemService.create(newItem, owner.getId())
+        );
+        assertEquals("Запрос с id " + fakeRequestId + " не найден", ex.getMessage());
+    }
+
+    @Test
     void update() {
         ItemDto createdItem = itemService.create(newItem, owner.getId());
         UpdateItem updateItem = new UpdateItem("Updated Item", "Updated Description", false);
@@ -151,6 +208,16 @@ class ItemServiceImplTest {
 
         assertNotNull(commentDto.getId());
         assertEquals("Great item!", commentDto.getText());
+    }
+
+    @Test
+    void addCommentWithoutCompletedBooking_ShouldThrowConditionsNotFoundException() {
+        NewCommentRequest commentRequest = new NewCommentRequest("Test comment without booking");
+
+        ConditionsNotMetException exception = assertThrows(ConditionsNotMetException.class,
+                () -> itemService.addComment(item.getId(), commentRequest, owner.getId()));
+
+        assertEquals("Вы не можете оставить отзыв на эту вещь", exception.getMessage());
     }
 
     @Test
@@ -354,5 +421,58 @@ class ItemServiceImplTest {
         AllItemDto dto = itemService.getItemById(createdItem.getId(), owner.getId());
 
         assertNull(dto.getNextBooking());
+    }
+
+    @Test
+    void createItemWithValidRequestIdShouldSetRequest() {
+        Request validRequest = new Request();
+        validRequest.setDescription("Test request");
+        validRequest.setCreated(LocalDateTime.now());
+        validRequest.setRequestor(booker);
+        validRequest = requestRepository.save(validRequest);
+
+        newItem.setRequestId(validRequest.getId());
+
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        assertNotNull(createdItem.getId());
+        assertEquals(newItem.getName(), createdItem.getName());
+
+        Item savedItem = itemRepository.findById(createdItem.getId()).orElseThrow();
+        assertNotNull(savedItem.getRequest());
+        assertEquals(validRequest.getId(), savedItem.getRequest().getId());
+    }
+
+    @Test
+    void addCommentWithNonExistentUser_ShouldThrowNotFoundException() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+
+        Long nonExistentUserId = -999L;
+
+        NewCommentRequest commentRequest = new NewCommentRequest("Test comment");
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
+                itemService.addComment(createdItem.getId(), commentRequest, nonExistentUserId)
+        );
+
+        assertEquals("Пользователь не найден", exception.getMessage());
+    }
+
+    @Test
+    void getItemByName_ShouldThrowException_WhenTextIsNull() {
+        ConditionsNotMetException ex = assertThrows(ConditionsNotMetException.class,
+                () -> itemService.getItemByName(null));
+        assertEquals("Текс для поиска не указан", ex.getMessage());
+    }
+
+    @Test
+    void getItemByName_ShouldThrowException_WhenTextIsBlank() {
+        ConditionsNotMetException ex = assertThrows(ConditionsNotMetException.class,
+                () -> itemService.getItemByName(""));
+        assertEquals("Текс для поиска не указан", ex.getMessage());
+
+        ex = assertThrows(ConditionsNotMetException.class,
+                () -> itemService.getItemByName("   "));
+        assertEquals("Текс для поиска не указан", ex.getMessage());
     }
 }

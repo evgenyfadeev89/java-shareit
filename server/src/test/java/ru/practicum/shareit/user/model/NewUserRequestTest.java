@@ -2,8 +2,7 @@ package ru.practicum.shareit.user.model;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NewUserRequestTest {
 
@@ -71,4 +70,38 @@ public class NewUserRequestTest {
 
         assertEquals(newUserRequest1, newUserRequest2);
     }
+
+    @Test
+    void testHasValidName() {
+        NewUserRequest withValidName = new NewUserRequest("Иван Иванов", "valid@example.com");
+        assertTrue(withValidName.hasValidName());
+
+        NewUserRequest withNullName = new NewUserRequest(null, "valid@example.com");
+        assertFalse(withNullName.hasValidName());
+
+        NewUserRequest withEmptyName = new NewUserRequest("", "valid@example.com");
+        assertFalse(withEmptyName.hasValidName());
+
+        NewUserRequest withBlankName = new NewUserRequest("    ", "valid@example.com");
+        assertFalse(withBlankName.hasValidName());
+    }
+
+    @Test
+    void testHasValidEmail() {
+        NewUserRequest withValidEmail = new NewUserRequest("Иван Иванов", "ivan.ivanov@example.com");
+        assertTrue(withValidEmail.hasValidEmail());
+
+        NewUserRequest withNullEmail = new NewUserRequest("Иван Иванов", null);
+        assertFalse(withNullEmail.hasValidEmail());
+
+        NewUserRequest withEmptyEmail = new NewUserRequest("Иван Иванов", "");
+        assertFalse(withEmptyEmail.hasValidEmail());
+
+        NewUserRequest withBlankEmail = new NewUserRequest("Иван Иванов", "   ");
+        assertFalse(withBlankEmail.hasValidEmail());
+
+        NewUserRequest withoutAtEmail = new NewUserRequest("Иван Иванов", "ivan.ivanovexample.com");
+        assertFalse(withoutAtEmail.hasValidEmail());
+    }
+
 }
