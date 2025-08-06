@@ -91,6 +91,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public AllItemDto getItemById(Long itemId, Long userId) {
+        if (userId == null) {
+            throw new ConditionsNotMetException("ID пользователя не указан");
+        }
+        if (userRepository.findById(userId).isEmpty()) {
+            throw new NotFoundException("Такого пользователя не существует");
+        }
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
@@ -133,6 +139,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemByName(String text) {
+        if (text == null || text.isBlank()) {
+            throw new ConditionsNotMetException("Текс для поиска не указан");
+        }
         return itemRepository.findByName(text)
                 .stream()
                 .filter(itm -> itm.getAvailable().equals(true))
@@ -165,7 +174,7 @@ public class ItemServiceImpl implements ItemService {
 
         if (newItem.getRequestId() != null) {
             Request request = requestRepository.findById(newItem.getRequestId())
-                    .orElseThrow(() -> new NotFoundException("Запрос с id " + newItem.getRequestId() + " не найден"));
+                    .orElseThrow(() -> new ConditionsNotMetException("Запрос с id " + newItem.getRequestId() + " не найден"));
             item.setRequest(request);
         }
 

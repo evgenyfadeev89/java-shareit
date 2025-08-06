@@ -8,10 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.ConditionsNotMetException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.AllItemDto;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.NewCommentRequest;
 import ru.practicum.shareit.item.model.NewItem;
 import ru.practicum.shareit.item.model.UpdateItem;
@@ -41,6 +44,8 @@ class ItemServiceImplTest {
     private BookingRepository bookingRepository;
 
     private User owner;
+    private User booker;
+    private Item item;
     private NewItem newItem;
     private UpdateItem updateItem;
 
@@ -49,11 +54,17 @@ class ItemServiceImplTest {
         owner = new User(null, "Owner User", "owner@example.com");
         owner = userRepository.save(owner);
 
+        booker = new User(null, "Booker", "booker@example.com");
+        booker = userRepository.save(booker);
+
         newItem = new NewItem("Test Item",
                 "Description",
                 true,
                 null,
                 null);
+
+        item = new Item(null, "Item Name", "Item Description", true, owner, null);
+        itemRepository.save(item);
     }
 
     @Test
@@ -61,6 +72,35 @@ class ItemServiceImplTest {
         ItemDto createdItem = itemService.create(newItem, owner.getId());
         assertNotNull(createdItem.getId());
         assertEquals(newItem.getName(), createdItem.getName());
+    }
+
+    @Test
+    void findAllShouldSetLastAndNextBooking() {
+        Booking pastBooking = new Booking();
+        pastBooking.setItem(item);
+        pastBooking.setBooker(booker);
+        pastBooking.setStart(LocalDateTime.now().minusDays(5));
+        pastBooking.setEnd(LocalDateTime.now().minusDays(2));
+        bookingRepository.save(pastBooking);
+
+        Booking futureBooking = new Booking();
+        futureBooking.setItem(item);
+        futureBooking.setBooker(booker);
+        futureBooking.setStart(LocalDateTime.now().plusDays(3));
+        futureBooking.setEnd(LocalDateTime.now().plusDays(5));
+        bookingRepository.save(futureBooking);
+
+        List<AllItemDto> items = itemService.findAll(owner.getId());
+
+        assertFalse(items.isEmpty());
+
+        AllItemDto returnedItem = items.get(0);
+
+        assertNotNull(returnedItem.getLastBooking());
+        assertEquals(pastBooking.getEnd(), returnedItem.getLastBooking());
+
+        assertNotNull(returnedItem.getNextBooking());
+        assertEquals(futureBooking.getStart(), returnedItem.getNextBooking());
     }
 
     @Test
@@ -119,9 +159,66 @@ class ItemServiceImplTest {
     }
 
     @Test
+    void createItemWithNullUser() {
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithNullItemName() {
+        newItem.setName(null);
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithBlankItemName() {
+        newItem.setName("");
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithNullItemDescription() {
+        newItem.setDescription(null);
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithBlankItemDescription() {
+        newItem.setDescription("");
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithNullItemAvailable() {
+        newItem.setAvailable(null);
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
+    void createItemWithNotValidItemRequest() {
+        newItem.setRequestId(999L);
+        assertThrows(ConditionsNotMetException.class, () -> itemService.create(newItem, null));
+    }
+
+    @Test
     void updateItemWithNonExistentItem() {
         UpdateItem updateItem = new UpdateItem("Updated Item", "Updated Description", false);
         assertThrows(NotFoundException.class, () -> itemService.update(999L, updateItem, owner.getId()));
+    }
+
+    @Test
+    void updateItemWithNotOwnerItem() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+        User notOwner = userRepository.save(new User(null, "notOwner User", "owner2@example.com"));
+        UpdateItem updateItem = new UpdateItem("Updated Item", "Updated Description", false);
+        assertThrows(ForbiddenException.class, () -> itemService.update(createdItem.getId(), updateItem, notOwner.getId()));
+    }
+
+    @Test
+    void updateItemWithNullUser() {
+        ItemDto createdItem = itemService.create(newItem, owner.getId());
+        UpdateItem updateItem = new UpdateItem("Updated Item", "Updated Description", false);
+        assertThrows(ConditionsNotMetException.class, () ->
+                itemService.update(createdItem.getId(), updateItem, null));
     }
 
     @Test
@@ -135,9 +232,13 @@ class ItemServiceImplTest {
     }
 
     @Test
+    void getItemsByNullUserId() {
+        assertThrows(ConditionsNotMetException.class, () -> itemService.getItemById(888L, null));
+    }
+
+    @Test
     void searchItemsWithEmptyText() {
-        List<ItemDto> items = itemService.getItemByName("");
-        assertTrue(items.isEmpty());
+        assertThrows(ConditionsNotMetException.class, () -> itemService.getItemByName(""));
     }
 
     @Test
