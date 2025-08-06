@@ -74,7 +74,7 @@ class ItemMapperTest {
     }
 
     @Test
-    void testUpdateItemFields_withAfterMapping() {
+    void testUpdateItemFieldsWithAfterMapping() {
         Item item = new Item();
         item.setId(100L);
         item.setName("OldName");
@@ -94,7 +94,7 @@ class ItemMapperTest {
     }
 
     @Test
-    void testUpdateItemFields_ignoresNullValues() {
+    void testUpdateItemFieldsIgnoresNullValues() {
         Item item = new Item();
         item.setName("OldName");
         item.setDescription("OldDescription");
@@ -107,5 +107,33 @@ class ItemMapperTest {
         assertEquals("OldName", item.getName());
         assertEquals("OldDescription", item.getDescription());
         assertTrue(item.getAvailable());
+    }
+
+    @Test
+    void testMapOwnerReturnsNullWhenIdIsNull() {
+        User user = itemMapper.mapOwner(null);
+        assertNull(user, "mapOwner должен вернуть null при передаче null");
+    }
+
+    @Test
+    void testMapOwnerReturnsUserWithId() {
+        Long id = 5L;
+        User user = itemMapper.mapOwner(id);
+        assertNotNull(user, "mapOwner не должен вернуть null");
+        assertEquals(id, user.getId(), "mapOwner должен установить корректный id");
+    }
+
+    @Test
+    void testMapRequestReturnsNullWhenIdIsNull() {
+        Request request = itemMapper.mapRequest(null);
+        assertNull(request, "mapRequest должен вернуть null при передаче null");
+    }
+
+    @Test
+    void testMapRequestReturnsRequestWithId() {
+        Long id = 10L;
+        Request request = itemMapper.mapRequest(id);
+        assertNotNull(request, "mapRequest не должен вернуть null");
+        assertEquals(id, request.getId(), "mapRequest должен установить корректный id");
     }
 }
