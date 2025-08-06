@@ -6,6 +6,7 @@ target/
 
 checkstyle.xml
 
+
 ### STS ###
 .apt_generated
 .classpath
