@@ -31,4 +31,19 @@ public class NewCommentRequestTest {
         NewCommentRequest newCommentRequest = objectMapper.readValue(json, NewCommentRequest.class);
         assertThat(newCommentRequest.getText()).isEqualTo("Test comment");
     }
+
+    @Test
+    void testHasValidText() {
+        NewCommentRequest validRequest = new NewCommentRequest("Valid text");
+        assertThat(validRequest.hasValidtext()).isTrue();
+
+        NewCommentRequest nullTextRequest = new NewCommentRequest(null);
+        assertThat(nullTextRequest.hasValidtext()).isFalse();
+
+        NewCommentRequest emptyTextRequest = new NewCommentRequest("");
+        assertThat(emptyTextRequest.hasValidtext()).isFalse();
+
+        NewCommentRequest blankTextRequest = new NewCommentRequest("   ");
+        assertThat(blankTextRequest.hasValidtext()).isFalse();
+    }
 }

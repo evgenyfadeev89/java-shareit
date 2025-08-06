@@ -159,6 +159,15 @@ class ItemControllerTest {
     }
 
     @Test
+    void findItemByNameEmptyList() throws Exception {
+        given(itemService.getItemByName(any())).willReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/items/search")
+                        .param("text", ""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void createComment() throws Exception {
         given(itemService.addComment(anyLong(), any(NewCommentRequest.class), anyLong())).willReturn(commentDto);
 

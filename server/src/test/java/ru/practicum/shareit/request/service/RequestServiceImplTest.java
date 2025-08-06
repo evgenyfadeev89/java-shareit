@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ConditionsNotMetException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.PersonalRequestDto;
 import ru.practicum.shareit.request.dto.PublicRequestDto;
@@ -46,6 +47,19 @@ class RequestServiceImplTest {
     }
 
     @Test
+    void createNotValidDescription() {
+        newRequest.setDescription(null);
+        assertThrows(ConditionsNotMetException.class, () ->
+                requestService.create(newRequest, requestor.getId(), LocalDateTime.now()));
+    }
+
+    @Test
+    void createNotValidRequestor() {
+        assertThrows(NotFoundException.class, () ->
+                requestService.create(newRequest, 999L, LocalDateTime.now()));
+    }
+
+    @Test
     void findAllPersonal() {
         requestService.create(newRequest, requestor.getId(), LocalDateTime.now());
         List<PersonalRequestDto> requests = requestService.findAllPersonal(requestor.getId());
@@ -54,7 +68,7 @@ class RequestServiceImplTest {
 
     @Test
     void findAll() {
-        requestService.create(newRequest, 2L, LocalDateTime.now());
+        requestService.create(newRequest, requestor.getId(), LocalDateTime.now());
         List<PublicRequestDto> requests = requestService.findAll(requestor.getId());
         assertTrue(requests.isEmpty());
     }
@@ -62,7 +76,7 @@ class RequestServiceImplTest {
     @Test
     void getRequestById() {
         RequestDto createdRequest = requestService.create(newRequest, requestor.getId(), LocalDateTime.now());
-        PersonalRequestDto foundRequest = requestService.getRequestById(requestor.getId(), createdRequest.getId());
+        PersonalRequestDto foundRequest = requestService.getRequestById(createdRequest.getId(), requestor.getId());
         assertEquals(createdRequest.getId(), foundRequest.getId());
     }
 

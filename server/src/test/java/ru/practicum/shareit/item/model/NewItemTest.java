@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.user.model.User;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -125,5 +126,29 @@ public class NewItemTest {
                 owner.getId(),
                 null);
         assertNotEquals(newItem, new Object());
+    }
+
+    @Test
+    void testHasValidName() {
+        User owner = new User(1L, "Owner", "owner@example.com");
+        Request request = new Request();
+        NewItem newItem = new NewItem("NewItem Name",
+                "NewItem Description",
+                true,
+                owner.getId(),
+                request.getId());
+        assertThat(newItem.hasValidName()).isTrue();
+
+        NewItem newItemInvalidName = newItem;
+        newItemInvalidName.setName(null);
+        assertThat(newItemInvalidName.hasValidName()).isFalse();
+
+        NewItem newItemInvalidDescription = newItem;
+        newItemInvalidName.setDescription(null);
+        assertThat(newItemInvalidDescription.hasValidDescription()).isFalse();
+
+        NewItem newItemInvalidAvailable = newItem;
+        newItemInvalidName.setAvailable(null);
+        assertThat(newItemInvalidAvailable.hasValidAvailable()).isFalse();
     }
 }

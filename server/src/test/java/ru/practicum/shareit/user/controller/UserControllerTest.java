@@ -97,6 +97,14 @@ class UserControllerTest {
     }
 
     @Test
+    void getAllNoContent() throws Exception {
+        given(userService.findAll()).willReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/users"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     void deleteUser() throws Exception {
         mockMvc.perform(delete("/users/{userId}", 1L))
                 .andExpect(status().isNoContent());

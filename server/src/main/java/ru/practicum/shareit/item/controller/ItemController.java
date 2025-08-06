@@ -53,14 +53,14 @@ public class ItemController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ItemDto> create(@RequestBody NewItem newItem,
-                                          @RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId) {
+                                          @RequestHeader(value = "X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.create(newItem, userId));
     }
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<ItemDto> update(@PathVariable("itemId") Long itemId,
                                           @Valid @RequestBody UpdateItem updateItem,
-                                          @RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId) {
+                                          @RequestHeader(value = "X-Sharer-User-Id") Long userId) {
         return ResponseEntity.ok(itemService.update(itemId, updateItem, userId));
     }
 
