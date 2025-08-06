@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class UpdateUserRequestTest {
-    
     @Test
     void testUpdateUserRequestConstructorAndGetters() {
         UpdateUserRequest updateUserRequest = new UpdateUserRequest("Иван Иванов", "ivan.ivanov@example.com");

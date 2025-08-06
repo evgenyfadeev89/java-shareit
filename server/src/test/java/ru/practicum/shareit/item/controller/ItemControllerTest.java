@@ -20,7 +20,6 @@ import ru.practicum.shareit.item.model.UpdateItem;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collections;
-import java.util.Enumeration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
