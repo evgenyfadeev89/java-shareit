@@ -74,13 +74,13 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getAll() {
+    void findAll() {
         userService.create(newUserRequest);
         assertFalse(userService.findAll().isEmpty());
     }
 
     @Test
-    void delete() {
+    void deleteUserById() {
         UserDto createdUser = userService.create(newUserRequest);
         userService.deleteUserById(createdUser.getId());
         assertThrows(NotFoundException.class, () -> userService.getUserById(createdUser.getId()));

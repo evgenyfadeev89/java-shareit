@@ -13,8 +13,4 @@ public class PublicRequestDto {
     private Long id;
     private String description;
     private LocalDateTime created;
-
-    public boolean hasValidDescription() {
-        return !(description == null || description.isBlank());
-    }
 }

@@ -16,8 +16,4 @@ public class PersonalRequestDto {
     private String description;
     private LocalDateTime created;
     private List<AnswerDto> items;
-
-    public boolean hasValidDescription() {
-        return !(description == null || description.isBlank());
-    }
 }
