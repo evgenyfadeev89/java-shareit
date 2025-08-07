@@ -1,6 +1,6 @@
 package ru.practicum.shareit.request.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,7 +53,7 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional()
+    @Transactional(readOnly = true)
     public List<PersonalRequestDto> findAllPersonal(Long userId) {
 
         List<Request> requests = requestRepository.findByRequestorIdOrderByCreatedDesc(userId);
@@ -78,7 +78,7 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
-    @Transactional()
+    @Transactional(readOnly = true)
     public List<PublicRequestDto> findAll(Long userId) {
         List<Request> requests = requestRepository.findByRequestorIdNotOrderByCreatedDesc(userId);
 
@@ -89,7 +89,7 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
-    @Transactional()
+    @Transactional(readOnly = true)
     public PersonalRequestDto getRequestById(Long requestId, Long userId) {
         Request request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос с id " + requestId + " не найден"));
